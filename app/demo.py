@@ -98,7 +98,7 @@ elif app_mode == "Contextual Ranking":
     with st.expander("How the Graph is Used Here"):
         st.markdown("""
         1.  **Vector Search First:** The user's query is sent to Pinecone, which returns a list of papers based on semantic similarity (the `vector_results`). The LLM (`text-embedding-3-small`) is used here to turn the user's query and the paper abstracts into vectors.
-        2.  **Graph-Based Enrichment:** The IDs of these papers are sent to Neo4j. We fetch a critical piece of context that the vector DB doesn't have: the `citationCount`.
+        2.  **Graph Filtering:** The IDs of these papers are sent to Neo4j. We fetch a critical piece of context that the vector DB doesn't have: the `citationCount`.
         3.  **Intelligent Re-Ranking:** We compute a `hybrid_score` that combines the vector similarity score with the paper's citation count. The final `hybrid_results` are sorted by this score, pushing more authoritative papers to the top.
         """)
         st.info("""
