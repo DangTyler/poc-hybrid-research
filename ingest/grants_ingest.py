@@ -4,6 +4,26 @@ import re
 import json
 import os
 from concurrent.futures import ThreadPoolExecutor
+from neo4j import GraphDatabase
+from dotenv import load_dotenv
+import pinecone
+from openai import OpenAI
+
+load_dotenv()
+
+STATE_MAP = {
+    "al": "alabama", "ak": "alaska", "az": "arizona", "ar": "arkansas", "ca": "california",
+    "co": "colorado", "ct": "connecticut", "de": "delaware", "fl": "florida", "ga": "georgia",
+    "hi": "hawaii", "id": "idaho", "il": "illinois", "in": "indiana", "ia": "iowa",
+    "ks": "kansas", "ky": "kentucky", "la": "louisiana", "me": "maine", "md": "maryland",
+    "ma": "massachusetts", "mi": "michigan", "mn": "minnesota", "ms": "mississippi",
+    "mo": "missouri", "mt": "montana", "ne": "nebraska", "nv": "nevada", "nh": "new-hampshire",
+    "nj": "new-jersey", "nm": "new-mexico", "ny": "new-york", "nc": "north-carolina",
+    "nd": "north-dakota", "oh": "ohio", "ok": "oklahoma", "or": "oregon", "pa": "pennsylvania",
+    "ri": "rhode-island", "sc": "south-carolina", "sd": "south-dakota", "tn": "tennessee",
+    "tx": "texas", "ut": "utah", "vt": "vermont", "va": "virginia", "wa": "washington",
+    "wv": "west-virginia", "wi": "wisconsin", "wy": "wyoming",
+}
 
 def extract_grant_details(url):
     """
@@ -50,11 +70,20 @@ def crawl_state(state_abbr, limit=300):
     """
     Crawls a state's GrantPortal sitemap and extracts grant information.
     """
-    sitemap_url = f"https://{state_abbr}.thegrantportal.com/sitemap.xml"
+    state_name = STATE_MAP.get(state_abbr.lower())
+    if not state_name:
+        print(f"Error: State abbreviation '{state_abbr}' not found in mapping.")
+        return []
+        
+    sitemap_url = f"https://thegrantportal.com/sitemap_{state_name}_active_grants.xml"
     print(f"Fetching sitemap from {sitemap_url}")
     
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    
     try:
-        response = requests.get(sitemap_url)
+        response = requests.get(sitemap_url, headers=headers)
         response.raise_for_status()
         root = ET.fromstring(response.content)
         
@@ -84,11 +113,89 @@ def crawl_state(state_abbr, limit=300):
         print(f"Failed to fetch sitemap: {e}")
         return []
 
+def load_grants_to_neo4j_and_pinecone(grants):
+    """
+    Simulates the KG-Builder process by loading structured grant data into Neo4j
+    and upserting their embeddings into Pinecone.
+    """
+    # --- Neo4j Connection ---
+    uri = os.getenv("NEO4J_URI")
+    user = os.getenv("NEO4J_USERNAME")
+    password = os.getenv("NEO4J_PASSWORD")
+    if not all([uri, user, password]):
+        print("Neo4j credentials not found. Skipping Neo4j load.")
+        return
+    driver = GraphDatabase.driver(uri, auth=(user, password))
+
+    # --- Pinecone Connection ---
+    pinecone_api_key = os.getenv("PINECONE_API_KEY")
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not all([pinecone_api_key, openai_api_key]):
+        print("Pinecone/OpenAI keys not found. Skipping Pinecone load.")
+        return
+    pc = pinecone.Pinecone(api_key=pinecone_api_key)
+    openai_client = OpenAI(api_key=openai_api_key)
+    index_name = "hybrid-research-poc"
+    if index_name not in pc.list_indexes().names():
+        print(f"Creating Pinecone index: {index_name}")
+        pc.create_index(name=index_name, dimension=1536, metric="cosine", spec=pinecone.ServerlessSpec(cloud='aws', region='us-east-1'))
+    index = pc.Index(index_name)
+
+    print("Processing and loading grants...")
+    with driver.session() as session:
+        for grant in grants:
+            # --- Neo4j Ingestion (Simulating KG-Builder) ---
+            print(f"  - Loading grant '{grant['id']}' to Neo4j")
+            session.run("""
+                MERGE (g:Grant {id: $id})
+                SET g.title = $title, g.amount = $amount, g.url = $url, g.description = $description
+
+                MERGE (t:Topic {name: $topic})
+                MERGE (s:State {name: $state})
+                MERGE (d:Deadline {date: $deadline})
+
+                MERGE (g)-[:FOCUS_ON]->(t)
+                MERGE (g)-[:ELIGIBLE_FOR]->(s)
+                MERGE (g)-[:HAS_DEADLINE]->(d)
+            """, **grant)
+
+            # --- Pinecone Ingestion ---
+            if grant.get('description'):
+                print(f"  - Embedding and upserting grant '{grant['id']}' to Pinecone")
+                try:
+                    res = openai_client.embeddings.create(input=[grant['description']], model="text-embedding-3-small")
+                    embedding = res.data[0].embedding
+                    index.upsert(vectors=[{
+                        "id": grant['id'],
+                        "values": embedding,
+                        "metadata": {"graph_id": f"Grant:{grant['id']}", "text": grant['description']}
+                    }])
+                except Exception as e:
+                    print(f"    Failed to process grant {grant['id']} for Pinecone: {e}")
+
+    driver.close()
+    print("Successfully loaded grants into Neo4j and Pinecone.")
+
+
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description="Crawl grant data from a state's GrantPortal.")
+    parser = argparse.ArgumentParser(description="Crawl and ingest grant data.")
     parser.add_argument("--state", type=str, default="al", help="State abbreviation (e.g., 'al', 'ca').")
     parser.add_argument("--limit", type=int, default=300, help="Max number of grants to crawl.")
+    parser.add_argument("--skip-crawl", action="store_true", help="Skip crawling and load from existing json file.")
     args = parser.parse_args()
 
-    crawl_state(args.state, args.limit)
+    grant_list = []
+    if not args.skip_crawl:
+        grant_list = crawl_state(args.state, args.limit)
+    else:
+        file_path = f"data/grants_{args.state}.json"
+        print(f"Skipping crawl. Loading grants from {file_path}")
+        if os.path.exists(file_path):
+            with open(file_path, "r") as f:
+                grant_list = json.load(f)
+        else:
+            print(f"{file_path} not found. Please run without --skip-crawl first.")
+
+    if grant_list:
+        load_grants_to_neo4j_and_pinecone(grant_list)

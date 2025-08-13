@@ -1,0 +1,72 @@
+[
+  {
+    "id": "AL-STEM-001",
+    "url": "https://alabama.thegrantportal.com/grant-details/sample/1",
+    "title": "STEM Teacher Development Grant",
+    "amount": 75000,
+    "state": "AL",
+    "topic": "STEM",
+    "deadline": "October 31, 2025",
+    "description": "A grant to support the professional development of high school STEM teachers in Alabama. Funds can be used for workshops, conferences, and new classroom technology. The goal is to improve student outcomes in science and mathematics."
+  },
+  {
+    "id": "AL-EDU-002",
+    "url": "https://alabama.thegrantportal.com/grant-details/sample/2",
+    "title": "Early Childhood Literacy Program",
+    "amount": 150000,
+    "state": "AL",
+    "topic": "Education",
+    "deadline": "September 15, 2025",
+    "description": "Funding for non-profit organizations in Alabama to establish or expand early childhood literacy programs for children aged 3-5. Programs should focus on foundational reading skills and parental engagement."
+  },
+  {
+    "id": "AL-HEALTH-003",
+    "url": "https://alabama.thegrantportal.com/grant-details/sample/3",
+    "title": "Rural Community Health Initiative",
+    "amount": 450000,
+    "state": "AL",
+    "topic": "Health",
+    "deadline": "November 30, 2025",
+    "description": "Supports projects that improve healthcare access and outcomes in rural areas of Alabama. Eligible projects include mobile clinics, telehealth expansion, and community health worker programs."
+  },
+  {
+    "id": "AL-STEM-004",
+    "url": "https://alabama.thegrantportal.com/grant-details/sample/4",
+    "title": "Alabama Girls Who Code Summer Camp",
+    "amount": 25000,
+    "state": "AL",
+    "topic": "STEM",
+    "deadline": "August 01, 2025",
+    "description": "Provides funding for summer camps aimed at encouraging middle school girls to pursue an interest in computer science and technology. The program must be free for all attendees."
+  },
+  {
+    "id": "AL-ART-005",
+    "url": "https://alabama.thegrantportal.com/grant-details/sample/5",
+    "title": "Community Arts Project Grant",
+    "amount": 10000,
+    "state": "AL",
+    "topic": "Arts",
+    "deadline": "December 15, 2025",
+    "description": "A grant for local artists and community groups in Alabama to create public art projects, such as murals, sculptures, and community gardens. Projects should reflect the local culture and history."
+  },
+  {
+    "id": "CA-TECH-001",
+    "url": "https://california.thegrantportal.com/grant-details/sample/6",
+    "title": "California Tech Startup Incubator",
+    "amount": 1000000,
+    "state": "CA",
+    "topic": "Technology",
+    "deadline": "October 01, 2025",
+    "description": "A large grant to support tech startups in California. This grant is over the $500,000 limit and is not in Alabama, so it should be filtered out by the graph query."
+  },
+  {
+    "id": "AL-EDU-006",
+    "url": "https://alabama.thegrantportal.com/grant-details/sample/7",
+    "title": "Statewide University Research Fund",
+    "amount": 750000,
+    "state": "AL",
+    "topic": "Education",
+    "deadline": "December 31, 2025",
+    "description": "A major research fund for universities in Alabama, but it exceeds our demo's $500,000 filter."
+  }
+]
