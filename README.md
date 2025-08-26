@@ -12,36 +12,28 @@ Streamlit demo combining vector search (Pinecone) with graph queries (Neo4j). Pr
 #### Option 1: Hosted Demo
 - [Deployed Demo](https://dangtyler-poc-hybrid-research-appdemo-otsorn.streamlit.app/)
 
-#### Option 2: Quick Start (Recommended)
+#### Option 2: Docker (Recommended for Demos)
 ```bash
+# 1. Create .env file with your credentials (see format below)
+# 2. Run quick-start script:
+
 # Linux/Mac
 ./quick-start.sh
 
 # Windows
 quick-start.bat
-```
-This script automatically detects Docker and sets up the environment.
 
-#### Option 3: Docker (Manual)
-```bash
-# 1. Create .env file with your credentials (see format below)
-# 2. Run with Docker Compose
+# Or manually:
 docker-compose up --build
-
-# Or with Docker directly
-docker build -t hybrid-search-poc .
-docker run -p 8501:8501 --env-file .env hybrid-search-poc
 ```
 Access at: http://localhost:8501
 
-#### Option 4: Local Python
+#### Option 3: Local Python (Development)
 ```bash
 pip install -r requirements.txt
 streamlit run app/demo.py
 ```
-
-#### Required Environment Variables
-Create a `.env` file with:
+Requires `.env` file with your credentials:
 ```
 OPENAI_API_KEY=your_openai_api_key_here
 NEO4J_URI=neo4j+s://your-instance.databases.neo4j.io

@@ -13,6 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Environment variables will be provided via docker-compose or .env file
+# This keeps credentials secure and out of the image
+
 # Expose Streamlit port
 EXPOSE 8501
 
