@@ -17,6 +17,19 @@ streamlit run app/demo.py
 - Secrets (local `.env` or Streamlit Cloud Secrets): `OPENAI_API_KEY`, `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, `PINECONE_API_KEY`
 - Streamlit Cloud: main file `app/demo.py`, Python 3.11; ensure Neo4j has data and Pinecone index `hybrid-research-poc` is populated
 
+### Troubleshooting
+- **Database connection error**: Ensure Neo4j Aura instance is running and credentials are correct
+- **Missing environment variables**: Create a `.env` file with:
+  ```
+  OPENAI_API_KEY=your_openai_api_key_here
+  NEO4J_URI=neo4j+s://your-instance.databases.neo4j.io
+  NEO4J_USERNAME=neo4j
+  NEO4J_PASSWORD=your_neo4j_password_here
+  PINECONE_API_KEY=your_pinecone_api_key_here
+  ```
+- **Import errors**: Run `pip install -r requirements.txt` to install dependencies
+- **No data found**: Run ingestion scripts to populate databases (see ingestion commands below)
+
 ### Current demo state
 - Focused on research papers; grants are minimal
 - No graph analytics (PageRank/community) yet; only live graph filtering and `citationCount` re‑ranking

@@ -3,28 +3,60 @@ import sys
 import os
 import json
 import pandas as pd
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Add project root to allow importing retrieval package
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from retrieval.hybrid_query import query as hybrid_query, get_co_citations, driver as neo4j_driver
-from retrieval.graph_qa import answer_question as graph_qa
-from ingest.upload_ingest import ingest_uploaded_docs
+
+try:
+    from retrieval.hybrid_query import query as hybrid_query, get_co_citations, driver as neo4j_driver
+    from retrieval.graph_qa import answer_question as graph_qa
+    from ingest.upload_ingest import ingest_uploaded_docs
+except ImportError as e:
+    st.error(f"Import error: {str(e)}")
+    st.info("Please ensure all dependencies are installed and environment variables are set.")
+    st.stop()
+
+# --- HELPER FUNCTIONS ---
+def check_environment():
+    """Check if all required environment variables are set"""
+    required_vars = ["NEO4J_URI", "NEO4J_USERNAME", "NEO4J_PASSWORD", "OPENAI_API_KEY", "PINECONE_API_KEY"]
+    missing_vars = []
+    for var in required_vars:
+        if not os.getenv(var):
+            missing_vars.append(var)
+    
+    if missing_vars:
+        st.error(f"Missing environment variables: {', '.join(missing_vars)}")
+        st.info("Please set up your .env file with the required credentials.")
+        return False
+    return True
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Hybrid Search PoC", layout="wide", initial_sidebar_state="expanded")
 
-# --- HELPER FUNCTIONS ---
+# --- ENVIRONMENT CHECK ---
+if not check_environment():
+    st.stop()
+
 def get_llm_experiment_results():
-    with neo4j_driver.session() as session:
-        result = session.run("""
-            MATCH (p:Paper)
-            WHERE p.llm_extracted_citations IS NOT NULL
-            RETURN 
-                p.title AS title, 
-                p.citationCount AS ground_truth, 
-                p.llm_extracted_citations AS llm_extracted
-        """)
-        return [record.data() for record in result]
+    try:
+        with neo4j_driver.session() as session:
+            result = session.run("""
+                MATCH (p:Paper)
+                WHERE p.llm_extracted_citations IS NOT NULL
+                RETURN 
+                    p.title AS title, 
+                    p.citationCount AS ground_truth, 
+                    p.llm_extracted_citations AS llm_extracted
+            """)
+            return [record.data() for record in result]
+    except Exception as e:
+        st.error(f"Database connection error: {str(e)}")
+        st.info("Please ensure your Neo4j database is running and environment variables are properly set.")
+        return []
 
 # --- SIDEBAR ---
 with st.sidebar:
