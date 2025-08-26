@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  hybrid-search-poc:
+    build: .
+    ports:
+      - "8501:8501"
+    environment:
+      # These will be loaded from your .env file
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - NEO4J_URI=${NEO4J_URI}
+      - NEO4J_USERNAME=${NEO4J_USERNAME}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+    volumes:
+      # Mount the app directory for development (optional)
+      - ./app:/app/app
+      - ./retrieval:/app/retrieval
+      - ./ingest:/app/ingest
+      - ./data:/app/data
+    env_file:
+      - .env

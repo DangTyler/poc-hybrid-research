@@ -8,26 +8,51 @@ Streamlit demo combining vector search (Pinecone) with graph queries (Neo4j). Pr
 - Ingestion: Fetch from Semantic Scholar → MERGE `Paper` nodes and `CITES` edges in Neo4j → optional `HAS_TOPIC` → embed to Pinecone.
 
 ### How to run or set up
-- Hosted: [Deployed Demo](https://dangtyler-poc-hybrid-research-appdemo-otsorn.streamlit.app/)
-- Local
+
+#### Option 1: Hosted Demo
+- [Deployed Demo](https://dangtyler-poc-hybrid-research-appdemo-otsorn.streamlit.app/)
+
+#### Option 2: Quick Start (Recommended)
+```bash
+# Linux/Mac
+./quick-start.sh
+
+# Windows
+quick-start.bat
+```
+This script automatically detects Docker and sets up the environment.
+
+#### Option 3: Docker (Manual)
+```bash
+# 1. Create .env file with your credentials (see format below)
+# 2. Run with Docker Compose
+docker-compose up --build
+
+# Or with Docker directly
+docker build -t hybrid-search-poc .
+docker run -p 8501:8501 --env-file .env hybrid-search-poc
+```
+Access at: http://localhost:8501
+
+#### Option 4: Local Python
 ```bash
 pip install -r requirements.txt
 streamlit run app/demo.py
 ```
-- Secrets (local `.env` or Streamlit Cloud Secrets): `OPENAI_API_KEY`, `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, `PINECONE_API_KEY`
-- Streamlit Cloud: main file `app/demo.py`, Python 3.11; ensure Neo4j has data and Pinecone index `hybrid-research-poc` is populated
+
+#### Required Environment Variables
+Create a `.env` file with:
+```
+OPENAI_API_KEY=your_openai_api_key_here
+NEO4J_URI=neo4j+s://your-instance.databases.neo4j.io
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=your_neo4j_password_here
+PINECONE_API_KEY=your_pinecone_api_key_here
+```
 
 ### Troubleshooting
 - **Database connection error**: Ensure Neo4j Aura instance is running and credentials are correct
-- **Missing environment variables**: Create a `.env` file with:
-  ```
-  OPENAI_API_KEY=your_openai_api_key_here
-  NEO4J_URI=neo4j+s://your-instance.databases.neo4j.io
-  NEO4J_USERNAME=neo4j
-  NEO4J_PASSWORD=your_neo4j_password_here
-  PINECONE_API_KEY=your_pinecone_api_key_here
-  ```
-- **Import errors**: Run `pip install -r requirements.txt` to install dependencies
+- **Import errors**: Run `pip install -r requirements.txt` (or use Docker to avoid dependency issues)
 - **No data found**: Run ingestion scripts to populate databases (see ingestion commands below)
 
 ### Current demo state
